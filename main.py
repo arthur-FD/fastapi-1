@@ -32,3 +32,5 @@ def get_region_view():
     cur.execute(core_query)
     core_data = cur.fetch_pandas_all()
     return core_data.to_json(date_format="iso", orient="split")
+
+
