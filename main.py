@@ -12,7 +12,7 @@ app = FastAPI()
 
 @app.get("/")
 def home():
-    return {"message":"Hello TutLinks.com"}
+    return {"message":"test main"}
 
 
 @app.get("/region_view")
@@ -32,5 +32,3 @@ def get_region_view():
     cur.execute(core_query)
     core_data = cur.fetch_pandas_all()
     return core_data.to_json(date_format="iso", orient="split")
-
-
