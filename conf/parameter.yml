@@ -1,0 +1,5 @@
+snowflake_config:
+  database: EV_VOLUMES_DEMAND_DB
+  schema: SAMPLE_DATA
+  warehouse: COMPUTE_WH
+  role: PYTHON_TEST
