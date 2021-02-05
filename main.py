@@ -12,7 +12,7 @@ app = FastAPI()
 
 @app.get("/")
 def home():
-    return {"message":"test main"}
+    return {"message":f"test: {os.environ['USER_SF']}"}
 
 
 @app.get("/region_view")
