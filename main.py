@@ -17,11 +17,10 @@ def home():
 
 @app.get("/region_view")
 def get_region_view():
-    with open(pathlib.Path(__file__).parent / "conf/parameter.yml", "r") as file:
+    with open("conf/parameter.yml", "r") as file:
         parameters = yaml.load(file, Loader=ConfigLoader)
-    with open(pathlib.Path(__file__).parent / "conf/funct_query.sql", "r") as file:
+    with open("conf/funct_query.sql", "r") as file:
         core_query = file.read()
-        
     conn = snowflake.connector.connect(
         user=os.environ["USER_SF"],
         password=os.environ["PSW_SF"],
