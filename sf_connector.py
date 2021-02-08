@@ -61,7 +61,7 @@ def get_sort(params: API_params = Depends(sort_model)):
     cur.execute(query)
     core_data = cur.fetch_pandas_all()
     # print(core_data) 
-    ytd_dir= pathlib.Path(__file__).parent / r'conf/ytd.sql'
+    ytd_dir= r'conf/ytd.sql'
     with open(ytd_dir, "r") as f:
         query_ytd=yaml.load(f)
     

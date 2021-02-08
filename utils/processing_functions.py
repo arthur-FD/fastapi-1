@@ -5,7 +5,6 @@ import pycountry
 from datetime import datetime
 import numpy as np
 import re
-import pathlib
 import calendar
 import pandas as pd
 from statistics import mean
@@ -15,10 +14,9 @@ import warnings
 warnings.filterwarnings("ignore")
 import snowflake.connector
 
-columns_display_dir= pathlib.Path(__file__).parent.parent / r'conf/columns_display.yml'
+columns_display_dir= r'./conf/columns_display.yml'
 with open(columns_display_dir, "r") as f:
     columns_display=yaml.load(f)
-import pathlib    
 
 def process_data(data,columns,granularity):
     if 'PROPULSION'  in columns:
@@ -194,10 +192,10 @@ def format_string(num,type_data='numerical'):
 
 
 def build_columns(data,columns,graph_columns=None):
-    mapping_snowflakes_display_dir= pathlib.Path(__file__).parent.parent / r'conf/mapping_snowflakes_display.yml'
+    mapping_snowflakes_display_dir=r'./conf/mapping_snowflakes_display.yml'
     with open(mapping_snowflakes_display_dir, "r") as f:
         mapping_snowflakes_display=yaml.load(f)
-    mapping_snowflakes_display_width_dir= pathlib.Path(__file__).parent.parent / r'conf/mapping_snowflakes_display_width.yml'
+    mapping_snowflakes_display_width_dir=  r'./conf/mapping_snowflakes_display_width.yml'
     with open(mapping_snowflakes_display_width_dir, "r") as f:
         mapping_snowflakes_display_width=yaml.load(f)        
     col_tree=columns[:min(len(columns),4)]
