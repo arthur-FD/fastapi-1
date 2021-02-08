@@ -94,37 +94,3 @@ register_tortoise(
     add_exception_handlers=True
 )
 
-
-import requests
-
-def get_token():
-    response = requests.post('http://127.0.0.1:8043/token',data	={'username':'arthur','password':'mypassword'})
-    return response.json()
-body={   "filters" : [
-                {
-                    "column": "OEM_GROUP",
-                    "value_filter": [
-                    "VW Group"
-                    ]
-                },
-
-                {
-                    "column": "PERIOD_GRANULARITY",
-                    "value_filter": [
-                    "YEAR","QUARTER"
-                    ]
-                }
-                ],
-    "columns" : ["OEM_GROUP","BRAND","PROPULSION"],
-    "graph_columns": [],
-    "metrics" : ["absolute","growth_YoY"],
-    "granularity": ["YEAR","QUARTER"]
-}
-
-
-token=r'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MSwidXNlcm5hbWUiOiJhcnRodXIiLCJwYXNzd29yZF9oYXNoIjoiJDJiJDEyJGtBU3hka3RyUFZvWjhXTEhMeTZscGVoRU44ajFGSElCbnoxSmRYYzZqUkszMkF4OTFNSmJLIn0.HqAEaOKxMCmoA4n5hLMylJAMkscIDGP2aZSDo06-MZo'
-
-
-def get_data(body,token):
-    response = requests.post('http://127.0.0.1:8043/custom_view',data=body,headers = {'Authorization': token})
-    return response.json()
