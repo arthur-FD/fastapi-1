@@ -8,7 +8,7 @@ hpack==4.0.0
 Hypercorn==0.11.1
 hyperframe==6.0.0
 iso8601==0.1.13
-passlib==1.7.4
+passlib
 pkg-resources
 priority==1.3.0
 pycparser==2.20
