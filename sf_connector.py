@@ -1,12 +1,6 @@
 import jwt
 import azure.functions as func
-from fastapi import FastAPI, Depends, HTTPException, status, Query,Body
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from passlib.hash import bcrypt
-from tortoise import fields 
-from tortoise.contrib.fastapi import register_tortoise
-from tortoise.contrib.pydantic import pydantic_model_creator
-from tortoise.models import Model 
+from fastapi import FastAPI, Depends, status, Query,Body
 from pydantic import BaseModel, create_model
 from typing import Optional,List,Dict,Tuple,Sequence
 import yaml
@@ -14,7 +8,6 @@ import jwt
 from utils.config_loader import ConfigLoader
 import snowflake.connector
 import os
-from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from passlib.hash import bcrypt
 from tortoise import fields 
