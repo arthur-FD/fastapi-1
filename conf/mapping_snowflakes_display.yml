@@ -1,0 +1,10 @@
+REGION: Region
+SALES_COUNTRY_CODE: Country
+PROPULSION: Propulsion
+OEM_GROUP: OEM
+BRAND: Brand
+MODEL: Model
+BATTERY: Battery (kWh)
+CATHODE: Chemistry
+GLOBAL_SEGMENT: Global Segment
+SUPPLIERS: Suppliers

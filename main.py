@@ -1,33 +1,130 @@
-from fastapi import FastAPI
-import os
-import pandas as pd
-import snowflake.connector
+import jwt
+
+from fastapi import FastAPI, Depends, HTTPException, status, Query,Body
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from passlib.hash import bcrypt
+from tortoise import fields 
+from tortoise.contrib.fastapi import register_tortoise
+from tortoise.contrib.pydantic import pydantic_model_creator
+from tortoise.models import Model 
+from pydantic import BaseModel, create_model
+from typing import Optional,List,Dict,Tuple
 import yaml
+import jwt
 from utils.config_loader import ConfigLoader
-import pathlib
+import snowflake.connector
+import os
+from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from passlib.hash import bcrypt
+from tortoise import fields 
+from tortoise.contrib.fastapi import register_tortoise
+from tortoise.contrib.pydantic import pydantic_model_creator
+from tortoise.models import Model 
+
 app = FastAPI()
 
-#domain where this api is hosted for example : localhost:5000/docs to see swagger documentation automagically generated.
+JWT_SECRET = 'myjwtsecret'
+
+class User(Model):
+    id = fields.IntField(pk=True)
+    username = fields.CharField(50, unique=True)
+    password_hash = fields.CharField(128)
+
+    def verify_password(self, password):
+        return bcrypt.verify(password, self.password_hash)
+
+User_Pydantic = pydantic_model_creator(User, name='User')
+UserIn_Pydantic = pydantic_model_creator(User, name='UserIn', exclude_readonly=True)
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
+
+async def authenticate_user(username: str, password: str):
+    user = await User.get(username=username)
+    if not user:
+        return False 
+    if not user.verify_password(password):
+        return False
+    return user 
+
+@app.post('/token')
+async def generate_token(form_data: OAuth2PasswordRequestForm = Depends()):
+    user = await authenticate_user(form_data.username, form_data.password)
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, 
+            detail='Invalid username or password'
+        )
+
+    user_obj = await User_Pydantic.from_tortoise_orm(user)
+
+    token = jwt.encode(user_obj.dict(), JWT_SECRET)
+
+    return {'access_token' : token, 'token_type' : 'bearer'}
+
+async def get_current_user(token: str = Depends(oauth2_scheme)):
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=['HS256'])
+        user = await User.get(id=payload.get('id'))
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, 
+            detail='Invalid username or password'
+        )
+
+    return await User_Pydantic.from_tortoise_orm(user)
 
 
-@app.get("/")
-def home():
-    return {"message":f"test: {os.environ['USER_SF']}"}
+@app.post('/users', response_model=User_Pydantic)
+async def create_user(user: UserIn_Pydantic):
+    user_obj = User(username=user.username, password_hash=bcrypt.hash(user.password_hash))
+    await user_obj.save()
+    return await User_Pydantic.from_tortoise_orm(user_obj)
+
+@app.get('/users/me', response_model=User_Pydantic)
+async def get_user(user: User_Pydantic = Depends(get_current_user)):
+    return user    
+
+register_tortoise(
+    app, 
+    db_url='sqlite://db.sqlite3',
+    modules={'models': ['main']},
+    generate_schemas=True,
+    add_exception_handlers=True
+)
 
 
-@app.get("/region_view")
-def get_region_view():
-    with open("conf/parameter.yml", "r") as file:
-        parameters = yaml.load(file, Loader=ConfigLoader)
-    with open("conf/funct_query.sql", "r") as file:
-        core_query = file.read()
-    conn = snowflake.connector.connect(
-        user=os.environ["USER_SF"],
-        password=os.environ["PSW_SF"],
-        account=os.environ["ACCOUNT_SF"],
-        **parameters["snowflake_config"]
-    ) 
-    cur = conn.cursor()
-    cur.execute(core_query)
-    core_data = cur.fetch_pandas_all()
-    return core_data.to_json(date_format="iso", orient="split")
+import requests
+
+def get_token():
+    response = requests.post('http://127.0.0.1:8043/token',data	={'username':'arthur','password':'mypassword'})
+    return response.json()
+body={   "filters" : [
+                {
+                    "column": "OEM_GROUP",
+                    "value_filter": [
+                    "VW Group"
+                    ]
+                },
+
+                {
+                    "column": "PERIOD_GRANULARITY",
+                    "value_filter": [
+                    "YEAR","QUARTER"
+                    ]
+                }
+                ],
+    "columns" : ["OEM_GROUP","BRAND","PROPULSION"],
+    "graph_columns": [],
+    "metrics" : ["absolute","growth_YoY"],
+    "granularity": ["YEAR","QUARTER"]
+}
+
+
+token=r'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MSwidXNlcm5hbWUiOiJhcnRodXIiLCJwYXNzd29yZF9oYXNoIjoiJDJiJDEyJGtBU3hka3RyUFZvWjhXTEhMeTZscGVoRU44ajFGSElCbnoxSmRYYzZqUkszMkF4OTFNSmJLIn0.HqAEaOKxMCmoA4n5hLMylJAMkscIDGP2aZSDo06-MZo'
+
+
+def get_data(body,token):
+    response = requests.post('http://127.0.0.1:8043/custom_view',data=body,headers = {'Authorization': token})
+    return response.json()
