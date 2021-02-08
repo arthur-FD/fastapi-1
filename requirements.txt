@@ -44,7 +44,7 @@ pyarrow==0.17.1
 pycountry==20.7.3
 pycparser==2.20
 pycryptodomex==3.9.9
-pydantic==1.7.3
+pydantic
 PyJWT==2.0.0
 pylint==2.4.4
 pyOpenSSL==20.0.1
@@ -71,4 +71,3 @@ uvloop==0.14.0
 websockets==8.1
 wrapt==1.11.2
 wsproto==1.0.0
-uvicorn[standard]
