@@ -22,8 +22,6 @@ from tortoise.contrib.fastapi import register_tortoise
 from tortoise.contrib.pydantic import pydantic_model_creator
 from tortoise.models import Model 
 from utils.processing_functions import *
-
-# from main import app,get_current_user,User_Pydantic
 from authentification import app,get_api_key,APIKey
 
 class filter_sql(BaseModel):
