@@ -153,19 +153,21 @@ def get_sort(params: API_params = Depends(sort_model)):
 
 @app.get("/quicktest", tags=["perfTest"])
 async def get_data(api_key: APIKey = Depends(get_api_key)):
-    with open("conf/parameter.yml", "r") as file:
-        parameters = yaml.load(file, Loader=ConfigLoader)
     query='''
     SELECT SUM(VALUE) FROM EV_VOLUMES_TEST WHERE BRAND='Tesla' and PERIOD_GRANULARITY='MONTH' and DATE='2020-12-31' GROUP BY BRAND
     '''
+    core_data = await fetch_data(query)
+    return core_data.to_json(date_format="iso", orient="split")
+
+async def fetch_data(query):
+    with open("conf/parameter.yml", "r") as file:
+        parameters = yaml.load(file, Loader=ConfigLoader)
     conn = snowflake.connector.connect(
         user=os.environ["USER_SF"],
         password=os.environ["PSW_SF"],
         account=os.environ["ACCOUNT_SF"],
-        **parameters["snowflake_config"]
-    ) 
-
+        **parameters["snowflake_config"]) 
     cur = conn.cursor()
     cur.execute(query)
-    core_data = cur.fetch_pandas_all()
-    return core_data.to_json(date_format="iso", orient="split")
+    core_data = cur.fetch_pandas_all()    
+    return core_data
