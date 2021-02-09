@@ -5,7 +5,6 @@ import pycountry
 from datetime import datetime
 import numpy as np
 import re
-import pathlib
 import calendar
 import pandas as pd
 from statistics import mean
