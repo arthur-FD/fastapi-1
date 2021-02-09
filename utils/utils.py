@@ -77,9 +77,10 @@ def numberOfDays(y, m):
       return 30
 
 def get_YTD_months(gran,last_date):
-    if gran =='YEAR' and last_date.month==12:
-        return ''
-    elif gran == 'YEAR' and last_date.month!=12:
+    # if gran =='YEAR' and last_date.month==12:
+    #     return ''
+    # elif gran == 'YEAR' and last_date.month!=12:
+    if gran == 'YEAR':    
         start_date=date(last_date.year-1,1,31)
         end_date=date(last_date.year-1,last_date.month,last_date.day)
         return start_date, end_date
@@ -113,3 +114,15 @@ def get_date(date_string):
 
 def sort_display_date(dates,gran):
     return list(map(lambda date_: display_date(gran,date_),sorted(map(get_date,dates))))
+
+def get_start_quarter(month):
+    quarter_dict={'3':'Q1','6':'Q2','9':'Q3','12':'Q4'}
+    list_quarter=list(map(int,quarter_dict.keys()))
+    if month in list_quarter:
+        # return None
+        return [[9,12],'Q4']
+    else:
+        list_quarter=[0]+list_quarter
+        list_quarter_n_month=sorted(list_quarter+[month])
+        idx_month=list_quarter_n_month.index(month)
+        return([list_quarter_n_month[idx_month-1],list_quarter_n_month[idx_month+1]],quarter_dict[str(list_quarter[idx_month])])

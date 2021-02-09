@@ -56,18 +56,75 @@ def get_sort(params: API_params = Depends(sort_model)):
         account=os.environ["ACCOUNT_SF"],
         **parameters["snowflake_config"]
     ) 
-
+    
     cur = conn.cursor()
     cur.execute(query)
     core_data = cur.fetch_pandas_all()
+    dict_TD={}
+    if 'YEAR' in params.granularity or 'QUARTER' in params.granularity:
+        last_year=core_data[core_data.PERIOD_GRANULARITY=='YEAR'].DATE.max().year
+        last_month=core_data[core_data.PERIOD_GRANULARITY=='YEAR'].DATE.max().month
+        query_month_availables=f'''select MONTHS_AVAILABLE FROM CONFIG where YEAR={last_year}'''
+        print(query_month_availables)
+        cur = conn.cursor()
+        cur.execute(query_month_availables)
+        nb_months = cur.fetch_pandas_all()['MONTHS_AVAILABLE'].iloc[0]
+        print(nb_months)
+        
+        if 0<nb_months<=12:     
+            if 'YEAR' in params.granularity:
+                where='WHERE '+' AND '.join( [mapping[filter_sql.column]+'.'+filter_sql.column+' IN '+str(filter_sql.value_filter).replace(',)',')') for filter_sql in filters_list if filter_sql.value_filter !=[] and filter_sql.column!= 'PERIOD_GRANULARITY'])
+                where+=f''' and EV_VOLUMES_TEST.PERIOD_GRANULARITY = 'MONTH' and EXTRACT(YEAR FROM EV_VOLUMES_TEST.DATE)={last_year} and EXTRACT(MONTH FROM EV_VOLUMES_TEST.DATE) in {tuple(range(0,int(nb_months+1)))} ''' 
+                query_ytd=f'''
+                SELECT {columns_string},EV_VOLUMES_TEST.DATE,EV_VOLUMES_TEST.PERIOD_GRANULARITY,sum(EV_VOLUMES_TEST.VALUE)
+                FROM EV_VOLUMES_TEST
+                INNER JOIN GEO_COUNTRY_TEST ON EV_VOLUMES_TEST.SALES_COUNTRY_CODE=GEO_COUNTRY_TEST.COUNTRY_CODE {where}
+                GROUP BY  {columns_string}, EV_VOLUMES_TEST.DATE,EV_VOLUMES_TEST.PERIOD_GRANULARITY 
+                '''           
+                cur = conn.cursor()
+                cur.execute(query_ytd)
+                data_ytd = process_data(cur.fetch_pandas_all(),params.columns,['MONTH']).set_index(params.columns).sum(axis=1)
+                print(data_ytd)
+                dict_TD[f'{last_year}YTD']=pd.DataFrame(data_ytd,columns=[f'{last_year}YTD'])    
+            if 'QUARTER' in params.granularity:
+                start_quarter=last_month
+                results=get_start_quarter(last_month)
+                print(results)
+                if results:
+                    start_quarter=results[0][0]
+                    quarter=results[1]
+                    where='WHERE '+' AND '.join( [mapping[filter_sql.column]+'.'+filter_sql.column+' IN '+str(filter_sql.value_filter).replace(',)',')') for filter_sql in filters_list if filter_sql.value_filter !=[] and filter_sql.column!= 'PERIOD_GRANULARITY'])
+                    where+=f''' and EV_VOLUMES_TEST.PERIOD_GRANULARITY = 'MONTH' and EXTRACT(YEAR FROM EV_VOLUMES_TEST.DATE)={last_year} and EXTRACT(MONTH FROM EV_VOLUMES_TEST.DATE) in {tuple(range(start_quarter,int(nb_months+1)))} ''' 
+                    query_ytd=f'''
+                    SELECT {columns_string},EV_VOLUMES_TEST.DATE,EV_VOLUMES_TEST.PERIOD_GRANULARITY,sum(EV_VOLUMES_TEST.VALUE)
+                    FROM EV_VOLUMES_TEST
+                    INNER JOIN GEO_COUNTRY_TEST ON EV_VOLUMES_TEST.SALES_COUNTRY_CODE=GEO_COUNTRY_TEST.COUNTRY_CODE {where}
+                    GROUP BY  {columns_string}, EV_VOLUMES_TEST.DATE,EV_VOLUMES_TEST.PERIOD_GRANULARITY 
+                    '''           
+                    cur = conn.cursor()
+                    cur.execute(query_ytd)
+                    data_qtd = process_data(cur.fetch_pandas_all(),params.columns,['MONTH']).set_index(params.columns).sum(axis=1)
+                    print(data_ytd)
+                    dict_TD[f'{last_year}{quarter}QTD']=pd.DataFrame(data_qtd,columns=[f'{last_year}{quarter}QTD'])              
+
+                
     # print(core_data) 
     ytd_dir= r'conf/ytd.sql'
     with open(ytd_dir, "r") as f:
         query_ytd=yaml.load(f)
     
     core_data_raw=process_data(core_data,params.columns,list(params.granularity))
-    core_data=build_df(core_data_raw,params.columns,list(params.graph_columns))
-    # print(core_data)
+    print(core_data_raw)
+    core_data_raw.set_index(params.columns,inplace=True)
+    print(dict_TD)
+    core_data_raw.to_csv('coredata.csv')
+    for key,df in dict_TD.items():
+        df.to_csv(f'{key}.csv')
+        print(pd.concat([core_data,df],axis=1),keys=params.columns)
+    core_data_raw.reset_index(inplace=True)
+    print(core_data)    
+    core_data=build_df(core_data_raw,params.columns,list(params.graph_columns))        
+    print(core_data)
     core_data.to_csv('test.csv')
     dataframe_list=[]
     if 'growth_seq' in params.metrics:
@@ -94,8 +151,8 @@ def get_sort(params: API_params = Depends(sort_model)):
 
     return complete_df.to_json(date_format="iso", orient="split")
 
-@app.post("/quicktest", tags=["perfTest"])
-def get_data(api_key: APIKey = Depends(get_api_key)):
+@app.get("/quicktest", tags=["perfTest"])
+async def get_data(api_key: APIKey = Depends(get_api_key)):
     with open("conf/parameter.yml", "r") as file:
         parameters = yaml.load(file, Loader=ConfigLoader)
     query='''
