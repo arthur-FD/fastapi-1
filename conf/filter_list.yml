@@ -1,0 +1,15 @@
+REGION: 
+  query: "select distinct REGION from GEO_COUNTRY_TEST"
+  func: ""
+COUNTRY: 
+  query: "select distinct COUNTRY_CODE from GEO_COUNTRY_TEST"
+  func: "country_code"
+PROPULSION: 
+  query: "select distinct PROPULSION from EV_VOLUMES_TEST"
+  func: "propulsion"
+OEM: 
+  query: "select distinct OEM_GROUP from EV_VOLUMES_TEST"
+  func: ""
+BRAND: 
+  query: "select distinct BRAND from EV_VOLUMES_TEST"
+  func: ""

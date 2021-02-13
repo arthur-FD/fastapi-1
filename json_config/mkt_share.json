@@ -1,0 +1,24 @@
+{
+    "filters": [
+        {
+            "column": "PERIOD_GRANULARITY",
+            "value_filter": [
+                "YEAR","QUARTER","MONTH"
+            ]
+        }
+    ],
+    "columns": [
+        "PROPULSION"
+    ],
+    "graph_columns": [],
+    "metrics": [
+        "absolute"
+    ],
+    
+    "granularity": [
+         "YEAR","QUARTER","MONTH"
+    ],
+    "date_filter": {
+
+    }
+}

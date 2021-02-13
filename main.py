@@ -5,6 +5,10 @@ from fastapi.openapi.utils import get_openapi
 import os
 from starlette.status import HTTP_403_FORBIDDEN
 from starlette.responses import RedirectResponse, JSONResponse
+from pydantic import BaseModel, create_model
+from typing import Optional,List,Dict,Tuple,Sequence
+from fastapi import FastAPI, Depends, status, Query,Body
+
 
 API_KEY = os.environ['API_KEY']
 API_KEY_NAME = "access_token"
@@ -68,3 +72,19 @@ async def route_logout_and_remove_cookie():
 async def get_open_api_endpoint(api_key: APIKey = Depends(get_api_key)):
     response = "How cool is this?"
     return response
+
+
+class filter_sql(BaseModel):
+    column: str
+    value_filter: Tuple[str,...]= tuple()
+
+class API_params(BaseModel):
+    columns: List[str]
+    filters: List[filter_sql]
+    graph_columns: Optional[List[str]]
+    metrics: List[str]
+    granularity: Tuple[str,...]
+    date_filter: Optional[Dict]
+    
+def sort_model(filters: List[filter_sql] = Body(...), columns: List[str] = Body(...),graph_columns: Optional[List[str]] = Body(...),metrics: List[str] = Body(...),granularity: Tuple[str,...] = Body(...),date_filter: Optional[Dict]=Body(...),api_key: APIKey = Depends(get_api_key)):
+    return API_params(filters=filters, columns=columns,graph_columns=graph_columns,metrics=metrics,granularity=granularity,date_filter=date_filter)

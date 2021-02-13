@@ -8,8 +8,9 @@ import re
 import calendar
 import pandas as pd
 from statistics import mean
-
-
+from datetime import datetime, timedelta
+from collections import OrderedDict
+from main import APIKey,API_params,filter_sql,sort_model
 
 def get_id_from_child(list_child):
     return [children['props']['id'] for children in list_child if children['props']['hidden']==False]
@@ -34,7 +35,8 @@ def display_date(granularity,date):
             return f'{str(date.year)}{quarter_dict[str(date.month)]}QTD'            
     if granularity == 'YEAR_YTD':
         return f'{str(date.year)}YTD'              
-    else: return 'NO MATCHING GRANULARITY'
+    else: 
+        return 'NO MATCHING GRANULARITY'
 
 def check_date_gran(string_to_check):
         regex_year = r'^20[0-9]{2}$'
@@ -120,9 +122,64 @@ def get_start_quarter(month):
     list_quarter=list(map(int,quarter_dict.keys()))
     if month in list_quarter:
         # return None
-        return [[9,12],'Q4']
+        return None
     else:
         list_quarter=[0]+list_quarter
         list_quarter_n_month=sorted(list_quarter+[month])
         idx_month=list_quarter_n_month.index(month)
         return([list_quarter_n_month[idx_month-1],list_quarter_n_month[idx_month+1]],quarter_dict[str(list_quarter[idx_month])])
+    
+def last_period(key):
+    if 'Q' in key:
+        return f'{int(key[:4])+1}{key[4:6]}'
+    else:
+        return str(int(key[:4])+1)
+    
+def get_list_date(date1,date2,gran_list):
+    list_date_to_exclude=[]
+    start, end = [datetime.strptime(_, "%Y-%m-%d") for _ in [date1,date2]]
+    for gran in gran_list:
+        list_date_to_exclude+=OrderedDict((display_date(gran,(start + timedelta(_))), None) for _ in range((end - start).days)).keys()
+        list_date_to_exclude=list_date_to_exclude[:-1]
+    return list_date_to_exclude
+
+def cols_model_id(cols):
+    if 'MODEL' in cols or 'BATTERY'in cols or 'SUPPLIERS' in cols:
+        cols+=['MODEL_ID']
+        cols+=['PROPULSION']
+        cols=list(set(cols)-set(['MODEL','BATTERY','SUPPLIERS']))
+    return cols
+
+def data_split_model_id(data,cols):
+    if 'MODEL_ID' in cols:
+        data['BATTERY']=data.MODEL_ID.apply(lambda model_id:model_id.split('||')[-1])
+        data['MODEL']=data.MODEL_ID.apply(lambda model_id:model_id.split('||')[0])        
+        suppliers_hev=data[data.PROPULSION.isin(['HEV','MHEV'])]['MODEL_ID'].apply(lambda model_id:model_id.split('||')[-2] if len(model_id.split('||'))>1 else '')   
+        suppliers_bev=data[data.PROPULSION.isin(['BEV','PHEV','FCEV'])]['MODEL_ID'].apply(lambda model_id:model_id.split('||')[-3] if len(model_id.split('||'))>1 else '')   
+        suppliers=pd.concat([suppliers_bev,suppliers_hev],axis=0)
+        data['SUPPLIERS']=suppliers.sort_index()
+    data['DATE']=data.DATE.apply(lambda str_date:datetime.strptime(str(str_date)[:10], r'%Y-%m-%d').date())
+    data=data.replace(np.nan,'')
+    return data
+
+def filter_funcs(name):
+    if name=='':
+        return lambda x: x
+    elif name=='propulsion':
+        return lambda propulsion_string:'MHEV' if 'MHEV' in propulsion_string else propulsion_string
+    elif name=='country_code':
+        return lambda country_code:(pycountry.countries.get(alpha_2=country_code).name,country_code)
+        
+        
+
+def get_default_body(name='mkt_share'):
+    with open(f'json_config/{name}.json', "r") as f:
+        body=json.loads(f.read())
+    body=sort_model (filters=body['filters'],
+                columns=body['columns'],
+                graph_columns=body['graph_columns'],
+                metrics=body['metrics'],
+                granularity=body['granularity'],
+                date_filter=body['date_filter'],
+                )  
+    return body

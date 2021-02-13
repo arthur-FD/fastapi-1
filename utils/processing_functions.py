@@ -32,14 +32,18 @@ def process_data(data,columns,granularity):
         dict_data_granularity[gran].drop(['PERIOD_GRANULARITY'],inplace=True,axis=1)
         list_col_ordered=list(map(lambda date_obj:display_date(gran,date_obj),sorted(list(set(dict_data_granularity[gran].DATE)))))
         dict_data_granularity[gran]['DATE']=dict_data_granularity[gran].DATE.apply(lambda date_obj:display_date(gran,date_obj))
+        print(dict_data_granularity)
         dict_data_granularity[gran]=dict_data_granularity[gran].groupby( columns+['DATE']).sum()
+        print(dict_data_granularity)
         if columns!=[]:
-            dict_data_granularity[gran]=dict_data_granularity[gran].unstack(level='DATE')
-            dict_data_granularity[gran].columns=[col[-1] for col in list(dict_data_granularity[gran].columns)]
+            try:
+                dict_data_granularity[gran]=dict_data_granularity[gran].unstack(level='DATE')
+                dict_data_granularity[gran].columns=[col[-1] for col in list(dict_data_granularity[gran].columns)]
+            except:
+                dict_data_granularity[gran]=pd.DataFrame()
         else: 
             dict_data_granularity[gran]=dict_data_granularity[gran].transpose()
         dict_data_granularity[gran]=dict_data_granularity[gran].replace(np.nan,0.0)[list_col_ordered]
-    print(dict_data_granularity)
     data_Filtered=pd.concat([df for df in dict_data_granularity.values()],axis=1)
     data_Filtered.reset_index(inplace=True)
     # if bool_YTD_year:
@@ -50,53 +54,107 @@ def process_data(data,columns,granularity):
         data_Filtered['SALES_COUNTRY_CODE']=data_Filtered['SALES_COUNTRY_CODE'].apply(lambda country_code:pycountry.countries.get(alpha_2=country_code).name )          
     return data_Filtered
 
-def compute_mkt_share(mkt_share,columns,granularity,conn):
-        cols_mkt_share=list(set(mkt_share.columns)-set(columns))
-        if 'PROPULSION' in columns:
-            query=f'''SELECT EV_VOLUMES_TEST.PROPULSION,EV_VOLUMES_TEST.DATE,EV_VOLUMES_TEST.PERIOD_GRANULARITY,sum(EV_VOLUMES_TEST.VALUE) 
-            FROM EV_VOLUMES_TEST 
-            where  EV_VOLUMES_TEST.PERIOD_GRANULARITY in {str(granularity).replace(',)',')')}
-            GROUP BY EV_VOLUMES_TEST.PROPULSION,EV_VOLUMES_TEST.DATE,EV_VOLUMES_TEST.PERIOD_GRANULARITY '''
-            cur = conn.cursor()
-            cur.execute(query)
-            data_prop = cur.fetch_pandas_all()
-            data_prop=process_data(data_prop,['PROPULSION'],granularity)
-            # print('cc')
-            # cols_prop=list(set(data_prop.columns)-set(['PROPULSION']))
-            # print(cols_prop)
-            for prop in mkt_share.PROPULSION.unique():
-                if prop!='':
-                    mkt_share.loc[mkt_share.PROPULSION==prop,cols_mkt_share]=mkt_share.loc[mkt_share.PROPULSION==prop,cols_mkt_share].div(data_prop.loc[data_prop.PROPULSION==prop,cols_mkt_share].iloc[0],axis=1)*100
-            mkt_share.loc[mkt_share.PROPULSION=='',cols_mkt_share]=mkt_share.loc[mkt_share.PROPULSION=='',cols_mkt_share].div(data_prop[cols_mkt_share].sum(),axis=1)*100
-        else:
-            query=f'''SELECT EV_VOLUMES_TEST.DATE,EV_VOLUMES_TEST.PERIOD_GRANULARITY,sum(EV_VOLUMES_TEST.VALUE) 
-            FROM EV_VOLUMES_TEST 
-            where  EV_VOLUMES_TEST.PERIOD_GRANULARITY in {str(granularity).replace(',)',')')}
-            GROUP BY EV_VOLUMES_TEST.PROPULSION,EV_VOLUMES_TEST.DATE,EV_VOLUMES_TEST.PERIOD_GRANULARITY '''
-            cur = conn.cursor()
-            cur.execute(query)
-            data_sum = cur.fetch_pandas_all()
-            data_sum=process_data(data_sum,[],granularity)
-            mkt_share[cols_mkt_share]=mkt_share[cols_mkt_share].div(data_sum[cols_mkt_share].iloc[0],axis=1)*100
-        return mkt_share
+# def compute_mkt_share(mkt_share,columns,granularity,conn,data_prop,col_graph=[]):
+#         if col_graph!=[]:columns+=['graph']
+#         cols_mkt_share=list(set(mkt_share.columns)-set(columns))
+#         print(data_prop)
+#         if 'PROPULSION' in columns:
+#             # query=f'''SELECT EV_VOLUMES_TEST.PROPULSION,EV_VOLUMES_TEST.DATE,EV_VOLUMES_TEST.PERIOD_GRANULARITY,sum(EV_VOLUMES_TEST.VALUE) 
+#             # FROM EV_VOLUMES_TEST 
+#             # where  EV_VOLUMES_TEST.PERIOD_GRANULARITY in {str(granularity).replace(',)',')')}
+#             # GROUP BY EV_VOLUMES_TEST.PROPULSION,EV_VOLUMES_TEST.DATE,EV_VOLUMES_TEST.PERIOD_GRANULARITY '''
+#             # cur = conn.cursor()
+#             # cur.execute(query)
+#             # data_prop = cur.fetch_pandas_all()
+#             # data_prop=process_data(data_prop,['PROPULSION'],granularity)
+#             # print('cc')
+#             # cols_prop=list(set(data_prop.columns)-set(['PROPULSION']))
+#             # print(cols_prop)
+#             for prop in data_prop.PROPULSION.unique():
+#                 if prop!='':
+#                     # temp=data_prop.loc[data_prop.PROPULSION==prop,cols_mkt_share].replace('',np.nan).replace(0,np.nan).iloc[0]
+#                     temp=data_prop.reindex(columns = cols_mkt_share).loc[data_prop.PROPULSION==prop,].replace('',np.nan).replace(0,np.nan).iloc[0]
+#                     mkt_share.loc[mkt_share.PROPULSION==prop,cols_mkt_share]=mkt_share.loc[mkt_share.PROPULSION==prop][cols_mkt_share].replace('',0).div(temp)
+#             print(mkt_share)
+#             print(data_prop)
+#             mkt_share.loc[mkt_share.PROPULSION=='',cols_mkt_share]=mkt_share.loc[mkt_share.PROPULSION=='',cols_mkt_share].div(data_prop[cols_mkt_share].sum())
+#         else:
+#             query=f'''SELECT EV_VOLUMES_TEST.DATE,EV_VOLUMES_TEST.PERIOD_GRANULARITY,sum(EV_VOLUMES_TEST.VALUE) 
+#             FROM EV_VOLUMES_TEST 
+#             where  EV_VOLUMES_TEST.PERIOD_GRANULARITY in {str(granularity).replace(',)',')')}
+#             GROUP BY EV_VOLUMES_TEST.PROPULSION,EV_VOLUMES_TEST.DATE,EV_VOLUMES_TEST.PERIOD_GRANULARITY '''
+#             cur = conn.cursor()
+#             cur.execute(query)
+#             data_sum = cur.fetch_pandas_all()
+#             data_sum=process_data(data_sum,[],granularity)
+#             mkt_share[cols_mkt_share]=mkt_share[cols_mkt_share].div(data_sum[cols_mkt_share].iloc[0],axis=1)
+            
+#         return mkt_share.iloc[1:]
 
+def compute_mkt_share(mkt_share,columns,granularity,conn,data_prop,col_graph=[]):
+        if col_graph!=[]:columns+=['graph']
+        cols_mkt_share=list(set(mkt_share.columns)-set(columns))
+        # print(data_prop)
+        # if 'PROPULSION' in columns and 'PROPULSION'!=columns[0]:
+        #      ### IF WE WANT TO MONITOR MKT SHARE IN A PTCULAR SEGMENT
+        #     # query=f'''SELECT EV_VOLUMES_TEST.PROPULSION,EV_VOLUMES_TEST.DATE,EV_VOLUMES_TEST.PERIOD_GRANULARITY,sum(EV_VOLUMES_TEST.VALUE) 
+        #     # FROM EV_VOLUMES_TEST 
+        #     # where  EV_VOLUMES_TEST.PERIOD_GRANULARITY in {str(granularity).replace(',)',')')}
+        #     # GROUP BY EV_VOLUMES_TEST.PROPULSION,EV_VOLUMES_TEST.DATE,EV_VOLUMES_TEST.PERIOD_GRANULARITY '''
+        #     # cur = conn.cursor()
+        #     # cur.execute(query)
+        #     # data_prop = cur.fetch_pandas_all()
+        #     # data_prop=process_data(data_prop,['PROPULSION'],granularity)
+        #     # print('cc')
+        #     # cols_prop=list(set(data_prop.columns)-set(['PROPULSION']))
+        #     # print(cols_prop)
+        #     for prop in data_prop.PROPULSION.unique():
+        #         if prop!='':
+        #             # temp=data_prop.loc[data_prop.PROPULSION==prop,cols_mkt_share].replace('',np.nan).replace(0,np.nan).iloc[0]
+        #             temp=data_prop.reindex(columns = cols_mkt_share).loc[data_prop.PROPULSION==prop,].replace('',np.nan).replace(0,np.nan).iloc[0]
+        #             print(prop)
+        #             mkt_share.loc[mkt_share.PROPULSION==prop,cols_mkt_share]=mkt_share.loc[mkt_share.PROPULSION==prop][cols_mkt_share].replace('',0).div(temp)
+        #     print(mkt_share)
+        #     print(data_prop[data_prop['PROPULSION']=='Total'][cols_mkt_share])
+        #     total_mkt=data_prop[data_prop['PROPULSION']=='Total'][cols_mkt_share].iloc[0]
+        #     mkt_share.loc[mkt_share.PROPULSION=='',cols_mkt_share]=mkt_share.loc[mkt_share.PROPULSION=='',cols_mkt_share].div(total_mkt)
+        # else:
+        #     total_mkt=data_prop[data_prop['PROPULSION']=='Total'][cols_mkt_share].iloc[0]
+        #     mkt_share[cols_mkt_share]=mkt_share[cols_mkt_share].div(total_mkt)
+        #     print('CCC')
+        #     print(mkt_share)
+        total_mkt=data_prop[data_prop['PROPULSION']=='Total'][cols_mkt_share].iloc[0]  
+        print(total_mkt)          
+        mkt_share[cols_mkt_share]=mkt_share[cols_mkt_share].replace('',np.nan).replace(0,np.nan).div(total_mkt)
+        print('CCC')
+        print(mkt_share)
+        
+        return mkt_share[mkt_share[columns[0]]!='Total']
+        # return mkt_share.iloc[1:]
 
 def build_df(data,columns,graph_columns=[]):
     data_processed=pd.DataFrame(columns=data.columns)
-    for i in range(min(3,len(columns))):
-        temp=data.groupby(columns[:i+1]).sum()
-        temp.reset_index(inplace=True)
-        if columns[i] in graph_columns:
-            temp['graph']='true'
-        data_processed=pd.concat([data_processed,temp],axis=0)
-    if len(columns)>=4:
-        data_processed=pd.concat([data_processed,data],axis=0)
-    if len(data_processed)>1:        
+    if len(columns)>1:
+        for i in range(min(3,len(columns))):
+            temp=data.groupby(columns[:i+1]).sum()
+            temp.reset_index(inplace=True)
+            if columns[i] in graph_columns:
+                temp['graph']='true'
+            data_processed=pd.concat([data_processed,temp],axis=0)
+        if len(columns)>=4:
+            data_processed=pd.concat([data_processed,data],axis=0)
+        if len(data_processed)>1:        
+            Total_sum=pd.DataFrame(data.set_index(columns).sum()).transpose()        
+            Total_sum[columns[0]]='Total'
+            data_processed=pd.concat([data_processed,Total_sum],axis=0)
+    else:
+        print(columns)
+        print(data)
         Total_sum=pd.DataFrame(data.set_index(columns).sum()).transpose()        
         Total_sum[columns[0]]='Total'
-        data_processed=pd.concat([data_processed,Total_sum],axis=0)
-    if graph_columns!=[]:
-        data_processed=data_processed[['graph']+list(data_processed.columns)[:-1]]    
+        data_processed=pd.concat([data,Total_sum],axis=0)
+    # if graph_columns!=[]:
+    #     data_processed=data_processed[['graph']+list(data_processed.columns)[:-1]]    
     return data_processed.fillna('')
 
 # def compute_growth(data,columns):
@@ -121,16 +179,21 @@ def build_df(data,columns,graph_columns=[]):
 #     # concat_growth=pd.concat([final_growth,data],axis=1)
 #     return final_growth,concat_growth
 
-def compute_growth_date_over_date(data,columns):
+def compute_growth_date_over_date(data,columns,graph_col=[]):
     col_tab_date={'MONTH':[],'QUARTER':[],'YEAR':[],'QUARTER_QTD':[],'YEAR_YTD':[]}
+    print(graph_col)
+    if graph_col!=[]:columns+=['graph']
     data=data.set_index(columns)
     final_growth=pd.DataFrame()
+    print(data.columns)
     for col in data.columns:
         col_tab_date[check_date_gran(col)].append(col)
     for gran, cols in col_tab_date.items():
         if cols !=[]:
-            final_growth=pd.concat([final_growth,data[sort_display_date(cols,gran)].pct_change(axis='columns')],axis=1)
+            temp=data[sort_display_date(cols,gran)].replace('',0).astype(float).pct_change(axis='columns')
+            final_growth=pd.concat([final_growth,temp],axis=1)
     final_growth.reset_index(inplace=True)
+    print(final_growth)
     return final_growth
 
 # def compute_mkt_share(data,columns):
@@ -141,10 +204,10 @@ def compute_growth_date_over_date(data,columns):
 #             mkt_share=pd.concat([mkt_share,data[data['PROPULSION']==prop].set_index(columns).astype(float).divide(sum_prop.loc[prop]).reset_index()],axis=0,ignore_index=True)
 #     return mkt_share.set_index(columns).applymap(lambda x: format_string(x,type_data='pct')).reset_index()
 
-def compute_growth_date_on_date(data,columns):
+def compute_growth_date_on_date(data,columns,graph_col=[]):
     col_tab_date={'MONTH':{},'QUARTER':{'Q1':pd.DataFrame(),'Q2':pd.DataFrame(),'Q3':pd.DataFrame(),'Q4':pd.DataFrame()},'YEAR':pd.DataFrame(),'QUARTER_QTD':pd.DataFrame(),'YEAR_YTD':pd.DataFrame()}
+    if graph_col!=[]:columns+=['graph']
     data=data.set_index(columns)
-
     final_growth=pd.DataFrame()
     for col in data.columns:
         if check_date_gran(col)=='QUARTER':
@@ -161,11 +224,13 @@ def compute_growth_date_on_date(data,columns):
                 cols=[]
                 for date_gran, df in elt.items():
                     cols_temp=list(df.columns)
-                    final_growth=pd.concat([final_growth,df[sort_display_date(cols_temp,gran)].pct_change(axis='columns')],axis=1)
+                    temp=df[sort_display_date(cols_temp,gran)].replace('',0).astype(float).pct_change(axis='columns')
+                    final_growth=pd.concat([final_growth,temp],axis=1)
                     cols+=cols_temp
         elif not elt.equals(pd.DataFrame()):
             cols=list(elt.columns)
-            final_growth=pd.concat([final_growth,elt[sort_display_date(cols,gran)].pct_change(axis='columns')],axis=1)
+            print(pd.concat([final_growth,elt[sort_display_date(cols,gran)]],axis=1))
+            final_growth=pd.concat([final_growth,elt[sort_display_date(cols,gran)].replace('',0).astype(float).pct_change(axis='columns')],axis=1)
     final_growth.reset_index(inplace=True)
     return final_growth
 
