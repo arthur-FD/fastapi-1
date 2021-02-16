@@ -94,7 +94,7 @@ def get_sort(params: API_params = Depends(sort_model)):
         cur = conn.cursor()
         cur.execute(query_month_availables)
         nb_months = cur.fetch_pandas_all()['MONTHS_AVAILABLE'].iloc[0]        
-        if 0<nb_months<=12:     
+        if 0<nb_months<12:     
             if 'YEAR' in params.granularity:
                 print(filters_list)
                 where= ' AND '.join( [mapping[filter_sql.column]+'.'+filter_sql.column+' IN '+str(filter_sql.value_filter).replace(r"'MHEV',",r" 'MHEV 12V / 48V','MHEV 48V','MHEV 24V','MHEV 12V',").replace(',)',')') for filter_sql in filters_list if filter_sql.value_filter != tuple() and filter_sql.column!= 'PERIOD_GRANULARITY'])

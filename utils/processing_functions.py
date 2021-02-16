@@ -41,14 +41,14 @@ def process_data(data,columns,granularity):
                 dict_data_granularity[gran].columns=[col[-1] for col in list(dict_data_granularity[gran].columns)]
             except:
                 dict_data_granularity[gran]=pd.DataFrame()
-        else: 
+        else:  
             dict_data_granularity[gran]=dict_data_granularity[gran].transpose()
         dict_data_granularity[gran]=dict_data_granularity[gran].replace(np.nan,0.0)[list_col_ordered]
     data_Filtered=pd.concat([df for df in dict_data_granularity.values()],axis=1)
     data_Filtered.reset_index(inplace=True)
     # if bool_YTD_year:
     #     data_Filtered.columns=[str(last_date.year )+'YTD'  if col ==str(last_date.year ) else col for col in data_Filtered.columns]
-    # if bool_YTD_quarter:
+    # if bool_YTD_quarter:;
     #     data_Filtered.columns=[str(last_date.year )+'Q'+str(quarter)+'QTD' if col ==str(last_date.year )+'Q'+str(quarter) else col for col in data_Filtered.columns ]
     if 'SALES_COUNTRY_CODE' in columns:
         data_Filtered['SALES_COUNTRY_CODE']=data_Filtered['SALES_COUNTRY_CODE'].apply(lambda country_code:pycountry.countries.get(alpha_2=country_code).name )          
