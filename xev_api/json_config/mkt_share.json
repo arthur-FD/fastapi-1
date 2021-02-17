@@ -20,5 +20,7 @@
     ],
     "date_filter": {
 
-    }
+    },
+    "ingestion_date":""
+
 }

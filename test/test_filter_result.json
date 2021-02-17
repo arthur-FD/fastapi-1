@@ -1,0 +1,635 @@
+{
+    "REGION": [
+        "Africa & ME",
+        "Americas",
+        "Asia-Pacific",
+        "Europe"
+    ],
+    "COUNTRY": [
+        [
+            "Algeria",
+            "DZ"
+        ],
+        [
+            "Andorra",
+            "AD"
+        ],
+        [
+            "Argentina",
+            "AR"
+        ],
+        [
+            "Australia",
+            "AU"
+        ],
+        [
+            "Austria",
+            "AT"
+        ],
+        [
+            "Azerbaijan",
+            "AZ"
+        ],
+        [
+            "Bahamas",
+            "BS"
+        ],
+        [
+            "Bahrain",
+            "BH"
+        ],
+        [
+            "Belarus",
+            "BY"
+        ],
+        [
+            "Belgium",
+            "BE"
+        ],
+        [
+            "Bermuda",
+            "BM"
+        ],
+        [
+            "Bosnia and Herzegovina",
+            "BA"
+        ],
+        [
+            "Brazil",
+            "BR"
+        ],
+        [
+            "Bulgaria",
+            "BG"
+        ],
+        [
+            "Canada",
+            "CA"
+        ],
+        [
+            "Chile",
+            "CL"
+        ],
+        [
+            "China",
+            "CN"
+        ],
+        [
+            "Colombia",
+            "CO"
+        ],
+        [
+            "Costa Rica",
+            "CR"
+        ],
+        [
+            "Croatia",
+            "HR"
+        ],
+        [
+            "Cyprus",
+            "CY"
+        ],
+        [
+            "Czechia",
+            "CZ"
+        ],
+        [
+            "Denmark",
+            "DK"
+        ],
+        [
+            "Ecuador",
+            "EC"
+        ],
+        [
+            "Egypt",
+            "EG"
+        ],
+        [
+            "Estonia",
+            "EE"
+        ],
+        [
+            "Fiji",
+            "FJ"
+        ],
+        [
+            "Finland",
+            "FI"
+        ],
+        [
+            "France",
+            "FR"
+        ],
+        [
+            "French Polynesia",
+            "PF"
+        ],
+        [
+            "Georgia",
+            "GE"
+        ],
+        [
+            "Germany",
+            "DE"
+        ],
+        [
+            "Greece",
+            "GR"
+        ],
+        [
+            "Hong Kong",
+            "HK"
+        ],
+        [
+            "Hungary",
+            "HU"
+        ],
+        [
+            "Iceland",
+            "IS"
+        ],
+        [
+            "India",
+            "IN"
+        ],
+        [
+            "Indonesia",
+            "ID"
+        ],
+        [
+            "Iraq",
+            "IQ"
+        ],
+        [
+            "Ireland",
+            "IE"
+        ],
+        [
+            "Israel",
+            "IL"
+        ],
+        [
+            "Italy",
+            "IT"
+        ],
+        [
+            "Japan",
+            "JP"
+        ],
+        [
+            "Jordan",
+            "JO"
+        ],
+        [
+            "Kazakhstan",
+            "KZ"
+        ],
+        [
+            "Korea, Republic of",
+            "KR"
+        ],
+        [
+            "Kuwait",
+            "KW"
+        ],
+        [
+            "Latvia",
+            "LV"
+        ],
+        [
+            "Lebanon",
+            "LB"
+        ],
+        [
+            "Liechtenstein",
+            "LI"
+        ],
+        [
+            "Lithuania",
+            "LT"
+        ],
+        [
+            "Luxembourg",
+            "LU"
+        ],
+        [
+            "Macao",
+            "MO"
+        ],
+        [
+            "Madagascar",
+            "MG"
+        ],
+        [
+            "Malaysia",
+            "MY"
+        ],
+        [
+            "Malta",
+            "MT"
+        ],
+        [
+            "Mauritius",
+            "MU"
+        ],
+        [
+            "Mexico",
+            "MX"
+        ],
+        [
+            "Moldova, Republic of",
+            "MD"
+        ],
+        [
+            "Monaco",
+            "MC"
+        ],
+        [
+            "Morocco",
+            "MA"
+        ],
+        [
+            "Nepal",
+            "NP"
+        ],
+        [
+            "Netherlands",
+            "NL"
+        ],
+        [
+            "New Zealand",
+            "NZ"
+        ],
+        [
+            "North Macedonia",
+            "MK"
+        ],
+        [
+            "Norway",
+            "NO"
+        ],
+        [
+            "Oman",
+            "OM"
+        ],
+        [
+            "Panama",
+            "PA"
+        ],
+        [
+            "Peru",
+            "PE"
+        ],
+        [
+            "Philippines",
+            "PH"
+        ],
+        [
+            "Poland",
+            "PL"
+        ],
+        [
+            "Portugal",
+            "PT"
+        ],
+        [
+            "Puerto Rico",
+            "PR"
+        ],
+        [
+            "Qatar",
+            "QA"
+        ],
+        [
+            "Romania",
+            "RO"
+        ],
+        [
+            "Russian Federation",
+            "RU"
+        ],
+        [
+            "Rwanda",
+            "RW"
+        ],
+        [
+            "Réunion",
+            "RE"
+        ],
+        [
+            "San Marino",
+            "SM"
+        ],
+        [
+            "Saudi Arabia",
+            "SA"
+        ],
+        [
+            "Serbia",
+            "RS"
+        ],
+        [
+            "Singapore",
+            "SG"
+        ],
+        [
+            "Slovakia",
+            "SK"
+        ],
+        [
+            "Slovenia",
+            "SI"
+        ],
+        [
+            "South Africa",
+            "ZA"
+        ],
+        [
+            "Spain",
+            "ES"
+        ],
+        [
+            "Sri Lanka",
+            "LK"
+        ],
+        [
+            "Sweden",
+            "SE"
+        ],
+        [
+            "Switzerland",
+            "CH"
+        ],
+        [
+            "Taiwan, Province of China",
+            "TW"
+        ],
+        [
+            "Thailand",
+            "TH"
+        ],
+        [
+            "Tunisia",
+            "TN"
+        ],
+        [
+            "Turkey",
+            "TR"
+        ],
+        [
+            "Ukraine",
+            "UA"
+        ],
+        [
+            "United Arab Emirates",
+            "AE"
+        ],
+        [
+            "United Kingdom",
+            "GB"
+        ],
+        [
+            "United States",
+            "US"
+        ],
+        [
+            "Uruguay",
+            "UY"
+        ],
+        [
+            "Viet Nam",
+            "VN"
+        ]
+    ],
+    "PROPULSION": [
+        "BEV",
+        "FCEV",
+        "HEV",
+        "MHEV",
+        "PHEV"
+    ],
+    "OEM": [
+        "BAIC",
+        "BMW Group",
+        "BYD",
+        "CHJ Automotive",
+        "Changan Automobile Group",
+        "Chery",
+        "Chery Automobile",
+        "Daimler AG",
+        "Deutsche Post DHL Group",
+        "Dongfeng Motor",
+        "FAW",
+        "FCA",
+        "Ferrari",
+        "Ferrari N.V.",
+        "Ford",
+        "GAC",
+        "GAC-NIO",
+        "GM",
+        "GM-SAIC",
+        "Geely Auto Group",
+        "Geely NECV Group",
+        "Geely-Volvo",
+        "Geely-Volvo Car Group",
+        "Great Wall Motors",
+        "Great Wall-YGM",
+        "Guoji Zhijun Auto",
+        "Hanteng Automobile",
+        "Hawtai Motor Group",
+        "Honda Motor",
+        "Hozon Auto",
+        "Hyundai Motor",
+        "JAC Motors",
+        "Jiangling Motors",
+        "Lifan Group",
+        "Mahindra & Mahindra",
+        "Mazda",
+        "Mazda Motor Corp.",
+        "NIO Inc.",
+        "Other",
+        "PSA Group",
+        "R-N-M Alliance",
+        "SAIC",
+        "South East Motor",
+        "Subaru Corp.",
+        "Suzuki",
+        "Tata Motors",
+        "Tata-JLR",
+        "Tesla Inc.",
+        "Toyota Motor Corp.",
+        "Unspec.",
+        "VW Group",
+        "WM Motors",
+        "Xiaopeng",
+        "Yema Automobile",
+        "Yudo Auto",
+        "Zhejiang Kandi",
+        "Zotye Auto"
+    ],
+    "BRAND": [
+        "Aiways",
+        "Alfa Romeo",
+        "Arcfox",
+        "Audi",
+        "BJEV",
+        "BMW",
+        "BYD",
+        "Baojun",
+        "Bentley",
+        "Bestune",
+        "Bollore",
+        "Borgward",
+        "Brilliance",
+        "Brilliance Jinbei",
+        "Brilliance Zinoro",
+        "Buick",
+        "CEVO",
+        "Cadillac",
+        "Changan",
+        "Changhe",
+        "Chery",
+        "Chevrolet",
+        "Chrysler",
+        "Citroen",
+        "DS",
+        "Dacia",
+        "Daewoo",
+        "Daihatsu",
+        "Dayun",
+        "Denza",
+        "Dongfeng",
+        "Emgrand",
+        "Enovate",
+        "Enranger",
+        "FOMM",
+        "Fengguang",
+        "Fengshen",
+        "Fengxing",
+        "Ferrari",
+        "Fiat",
+        "Fisker",
+        "Ford",
+        "Foton",
+        "GMC",
+        "Geely",
+        "Geometry",
+        "Golden Dragon",
+        "Goupil",
+        "Great Wall",
+        "Guangxi Auto",
+        "Haima",
+        "Hanteng",
+        "Haval",
+        "Hawtai",
+        "Hengrun",
+        "HiPhi",
+        "Holden",
+        "Honda",
+        "Hongqi",
+        "Horki",
+        "Hozon",
+        "Hycan",
+        "Hyundai",
+        "Infiniti",
+        "Iveco",
+        "JAC iEV",
+        "JMC",
+        "Jaguar",
+        "Jeep",
+        "Jetour",
+        "Joylong",
+        "Jun Feng",
+        "Junpai",
+        "Kandi",
+        "Karry",
+        "Kia",
+        "King Long",
+        "LEVC",
+        "Lancia",
+        "Land Rover",
+        "Leopaard",
+        "Levdeo",
+        "Lexus",
+        "Li Xiang",
+        "Lifan",
+        "Lincoln",
+        "Ling Pao",
+        "Lingbox",
+        "Link Tour",
+        "Luxgen",
+        "Lynk & Co",
+        "MAN",
+        "MG",
+        "Mahindra",
+        "Maple",
+        "Maserati",
+        "Maxus",
+        "Mazda",
+        "Mercedes-Benz",
+        "Mercury",
+        "Mia",
+        "Mini",
+        "Mitsubishi",
+        "NEVS",
+        "Nio",
+        "Nissan",
+        "Opel / Vauxhall",
+        "Ora",
+        "Oushang",
+        "Peugeot",
+        "Polestar",
+        "Porsche",
+        "Qiantu",
+        "Qiteng",
+        "Quoros",
+        "Ram",
+        "Range Rover",
+        "Red Star",
+        "Renault",
+        "Roewe",
+        "Ruichi",
+        "Saleen",
+        "Samsung",
+        "Saturn",
+        "Seat",
+        "Senia",
+        "Seres (SF Motors)",
+        "Sinogold",
+        "Sitech",
+        "Skoda",
+        "Smart",
+        "Sol",
+        "Soueast",
+        "StreetScooter",
+        "Subaru",
+        "Suda",
+        "Suzuki",
+        "Tata",
+        "Tesla",
+        "Think",
+        "Tianmei-Skywell",
+        "Toyota",
+        "Trumpchi",
+        "Unspec.",
+        "VW",
+        "Venucia",
+        "Volvo",
+        "WEY",
+        "Wanxiang",
+        "Weltmeister",
+        "Wuling",
+        "XPeng",
+        "Xiaokang",
+        "Yema",
+        "Yudo",
+        "Yulon",
+        "Yunque",
+        "Zedriv",
+        "ZhiDou",
+        "Zoomlion",
+        "Zotye"
+    ]
+}

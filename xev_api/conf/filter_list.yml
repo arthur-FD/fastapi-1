@@ -1,0 +1,17 @@
+LAST_DATE:
+  query: "select max(FORECAST_RELEASE_DATE) from VEHICLE_SPEC_TEST"
+REGION: 
+  query: "select distinct GEO_COUNTRY_TEST.REGION from GEO_COUNTRY_TEST INNER JOIN EV_VOLUMES_TEST ON EV_VOLUMES_TEST.SALES_COUNTRY_CODE=GEO_COUNTRY_TEST.COUNTRY_CODE"
+  func: ""
+COUNTRY: 
+  query: "select distinct GEO_COUNTRY_TEST.COUNTRY_CODE from GEO_COUNTRY_TEST INNER JOIN EV_VOLUMES_TEST ON EV_VOLUMES_TEST.SALES_COUNTRY_CODE=GEO_COUNTRY_TEST.COUNTRY_CODE"
+  func: "country_code"
+PROPULSION: 
+  query: "select distinct PROPULSION from EV_VOLUMES_TEST"
+  func: "propulsion"
+OEM: 
+  query: "select distinct OEM_GROUP from EV_VOLUMES_TEST"
+  func: ""
+BRAND: 
+  query: "select distinct BRAND from EV_VOLUMES_TEST"
+  func: ""

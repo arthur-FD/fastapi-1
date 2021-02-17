@@ -1,11 +1,11 @@
 import jwt
 import azure.functions as func
 from fastapi import FastAPI, Depends, status, Query,Body
-from pydantic import BaseModel, create_model
+from pydantic import BaseModel, create_model,constr
 from typing import Optional,List,Dict,Tuple,Sequence
 import yaml
 import jwt
-from utils.config_loader import ConfigLoader
+from xev_api.utils.config_loader import ConfigLoader
 import snowflake.connector
 import os
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -14,9 +14,61 @@ from tortoise import fields
 from tortoise.contrib.fastapi import register_tortoise
 from tortoise.contrib.pydantic import pydantic_model_creator
 from tortoise.models import Model 
-from utils.processing_functions import *
-from main import app,get_api_key,APIKey,API_params,filter_sql,sort_model
+from xev_api.utils.processing_functions import *
+from xev_api.main import app,get_api_key,APIKey,API_params,filter_sql,sort_model,sort_sql_filter
 
+
+@app.get("/get_filter_list/", tags=["filters"])
+def get_filters(ingestion_date:constr(regex=r'[0-9]{4}-[0-9]{2}-[0-9]{2}')="",api_key: APIKey = Depends(get_api_key)):
+    with open("xev_api/conf/parameter.yml", "r") as file:
+        parameters = yaml.load(file, Loader=ConfigLoader)
+    with open("xev_api/conf/filter_list.yml", "r") as file:
+        filter_list = yaml.load(file, Loader=ConfigLoader)
+    conn = snowflake.connector.connect(
+    user=os.environ["USER_SF"],
+    password=os.environ["PSW_SF"],
+    account=os.environ["ACCOUNT_SF"],
+    **parameters["snowflake_config"]
+    )  
+    filter_list_result={}
+    for filter_col, filter_info in filter_list.items():
+        if 'DATE' in filter_col:
+            # if test:
+            #     with open("conf/test_params.yml", "r") as file:
+            #         test_params = yaml.load(file, Loader=ConfigLoader)                
+            #     where=f" WHERE EV_VOLUMES_TEST.FORECAST_RELEASE_DATE='{test_params['ingestion_date_test']}'"
+            # else:    
+            #     cur = conn.cursor()
+            #     cur.execute(filter_info['query'])
+            #     ingestion_date = cur.fetch_pandas_all()['MAX(FORECAST_RELEASE_DATE)'].iloc[0]
+            #     where=f" WHERE EV_VOLUMES_TEST.FORECAST_RELEASE_DATE='{ingestion_date}'"
+            cur = conn.cursor()
+            cur.execute(filter_info['query'])
+            ingestion_date = cur.fetch_pandas_all()['MAX(FORECAST_RELEASE_DATE)'].iloc[0]
+            where=f" WHERE EV_VOLUMES_TEST.FORECAST_RELEASE_DATE='{ingestion_date}'"            
+        else:
+            cur = conn.cursor()
+            cur.execute(filter_info['query']+where)
+            data = cur.fetch_pandas_all()
+            filter_list_result[filter_col]=sorted(list(set(list(data[data.columns[0]].apply(filter_funcs(filter_info['func'])).values))))
+    return filter_list_result
+
+
+@app.get("/get_last_ingestion_date", tags=["ingestion"])
+def get_ingestion_date(api_key: APIKey = Depends(get_api_key)):
+    with open("xev_api/conf/parameter.yml", "r") as file:
+        parameters = yaml.load(file, Loader=ConfigLoader)
+    conn = snowflake.connector.connect(
+    user=os.environ["USER_SF"],
+    password=os.environ["PSW_SF"],
+    account=os.environ["ACCOUNT_SF"],
+    **parameters["snowflake_config"]
+    )  
+    query=r"select max(FORECAST_RELEASE_DATE) from VEHICLE_SPEC_TEST"
+    cur = conn.cursor()
+    cur.execute(query)    
+    ingestion_date = cur.fetch_pandas_all()['MAX(FORECAST_RELEASE_DATE)'].iloc[0]
+    return ingestion_date
 
 @app.post("/custom_view", tags=["custom query"])
 def get_sort(params: API_params = Depends(sort_model)):
@@ -24,11 +76,14 @@ def get_sort(params: API_params = Depends(sort_model)):
     # params.columns=cols_model_id(params.columns)
     YTD=False
     QTD=False
-    with open("conf/parameter.yml", "r") as file:
+    if params.ingestion_date=="":
+        params.ingestion_date=get_ingestion_date()
+    with open("xev_api/conf/parameter.yml", "r") as file:
         parameters = yaml.load(file, Loader=ConfigLoader)
-    with open("conf/mapping_columns.yml", "r") as file:
+    with open("xev_api/conf/mapping_columns.yml", "r") as file:
         mapping = yaml.load(file, Loader=ConfigLoader)
     columns_string=','.join(map(lambda x: f'{mapping[x]}.{x}' ,cols_model_id(params.columns.copy())))
+    params.filters.append(sort_sql_filter(column= "FORECAST_RELEASE_DATE",value_filter= [params.ingestion_date]))
     filters_list=params.filters
     filters_str=[mapping[filter_sql.column]+'.'+filter_sql.column+' IN '+str(filter_sql.value_filter).replace(r"'MHEV',",r" 'MHEV 12V / 48V','MHEV 48V','MHEV 24V','MHEV 12V',").replace(',)',')') for filter_sql in filters_list if filter_sql.value_filter !=tuple() and filter_sql.column!="DATE"]
     where=''
@@ -63,12 +118,10 @@ def get_sort(params: API_params = Depends(sort_model)):
     query=f'''
         SELECT {columns_string},EV_VOLUMES_TEST.DATE,EV_VOLUMES_TEST.PERIOD_GRANULARITY,sum(EV_VOLUMES_TEST.VALUE)
         FROM EV_VOLUMES_TEST
-        INNER JOIN GEO_COUNTRY_TEST ON EV_VOLUMES_TEST.SALES_COUNTRY_CODE=GEO_COUNTRY_TEST.COUNTRY_CODE
-        INNER JOIN VEHICLE_SPEC_TEST ON EV_VOLUMES_TEST.MODEL_ID=VEHICLE_SPEC_TEST.MODEL_ID {concat_filter}
+        INNER JOIN GEO_COUNTRY_TEST ON EV_VOLUMES_TEST.SALES_COUNTRY_CODE=GEO_COUNTRY_TEST.COUNTRY_CODE 
+        INNER JOIN VEHICLE_SPEC_TEST ON EV_VOLUMES_TEST.MODEL_ID=VEHICLE_SPEC_TEST.MODEL_ID AND EV_VOLUMES_TEST.FORECAST_RELEASE_DATE=VEHICLE_SPEC_TEST.FORECAST_RELEASE_DATE {concat_filter}
         GROUP BY  {columns_string}, EV_VOLUMES_TEST.DATE,EV_VOLUMES_TEST.PERIOD_GRANULARITY 
     '''
-    
-    print(query)
     conn = snowflake.connector.connect(
         user=os.environ["USER_SF"],
         password=os.environ["PSW_SF"],
@@ -80,7 +133,7 @@ def get_sort(params: API_params = Depends(sort_model)):
     core_data = cur.fetch_pandas_all()
     core_data= data_split_model_id(core_data,cols_model_id(params.columns.copy()).copy())
     last_date=date(1900,1,1)
-    for gran in params.granularity:
+    for gran in list(set(params.granularity)-set(['MONTH'])):
         postential_last_date=core_data[core_data.PERIOD_GRANULARITY==gran].DATE.max()
         if postential_last_date>last_date:
             last_date=postential_last_date
@@ -96,7 +149,6 @@ def get_sort(params: API_params = Depends(sort_model)):
         nb_months = cur.fetch_pandas_all()['MONTHS_AVAILABLE'].iloc[0]        
         if 0<nb_months<12:     
             if 'YEAR' in params.granularity:
-                print(filters_list)
                 where= ' AND '.join( [mapping[filter_sql.column]+'.'+filter_sql.column+' IN '+str(filter_sql.value_filter).replace(r"'MHEV',",r" 'MHEV 12V / 48V','MHEV 48V','MHEV 24V','MHEV 12V',").replace(',)',')') for filter_sql in filters_list if filter_sql.value_filter != tuple() and filter_sql.column!= 'PERIOD_GRANULARITY'])
                 date_filtering=f''' EV_VOLUMES_TEST.PERIOD_GRANULARITY = 'MONTH' and EXTRACT(YEAR FROM EV_VOLUMES_TEST.DATE)={last_year-1} and EXTRACT(MONTH FROM EV_VOLUMES_TEST.DATE) in {tuple(range(0,int(nb_months+1)))} ''' 
                 if date_filtering!='' and where!='':
@@ -106,8 +158,8 @@ def get_sort(params: API_params = Depends(sort_model)):
                 query_ytd=f'''
                 SELECT {columns_string},EV_VOLUMES_TEST.DATE,EV_VOLUMES_TEST.PERIOD_GRANULARITY,sum(EV_VOLUMES_TEST.VALUE)
                 FROM EV_VOLUMES_TEST
-                INNER JOIN GEO_COUNTRY_TEST ON EV_VOLUMES_TEST.SALES_COUNTRY_CODE=GEO_COUNTRY_TEST.COUNTRY_CODE
-                INNER JOIN VEHICLE_SPEC_TEST ON EV_VOLUMES_TEST.MODEL_ID=VEHICLE_SPEC_TEST.MODEL_ID {concat_filter}
+                INNER JOIN GEO_COUNTRY_TEST ON EV_VOLUMES_TEST.SALES_COUNTRY_CODE=GEO_COUNTRY_TEST.COUNTRY_CODE 
+                INNER JOIN VEHICLE_SPEC_TEST ON EV_VOLUMES_TEST.MODEL_ID=VEHICLE_SPEC_TEST.MODEL_ID AND EV_VOLUMES_TEST.FORECAST_RELEASE_DATE=VEHICLE_SPEC_TEST.FORECAST_RELEASE_DATE {concat_filter}
                 GROUP BY  {columns_string}, EV_VOLUMES_TEST.DATE,EV_VOLUMES_TEST.PERIOD_GRANULARITY 
                 '''   
                 cur = conn.cursor()
@@ -136,8 +188,8 @@ def get_sort(params: API_params = Depends(sort_model)):
                     query_ytd=f'''
                     SELECT {columns_string},EV_VOLUMES_TEST.DATE,EV_VOLUMES_TEST.PERIOD_GRANULARITY,sum(EV_VOLUMES_TEST.VALUE)
                     FROM EV_VOLUMES_TEST
-                    INNER JOIN GEO_COUNTRY_TEST ON EV_VOLUMES_TEST.SALES_COUNTRY_CODE=GEO_COUNTRY_TEST.COUNTRY_CODE
-                    INNER JOIN VEHICLE_SPEC_TEST ON EV_VOLUMES_TEST.MODEL_ID=VEHICLE_SPEC_TEST.MODEL_ID {where}
+                    INNER JOIN GEO_COUNTRY_TEST ON EV_VOLUMES_TEST.SALES_COUNTRY_CODE=GEO_COUNTRY_TEST.COUNTRY_CODE 
+                    INNER JOIN VEHICLE_SPEC_TEST ON EV_VOLUMES_TEST.MODEL_ID=VEHICLE_SPEC_TEST.MODEL_ID AND EV_VOLUMES_TEST.FORECAST_RELEASE_DATE=VEHICLE_SPEC_TEST.FORECAST_RELEASE_DATE {where}
                     GROUP BY  {columns_string}, EV_VOLUMES_TEST.DATE,EV_VOLUMES_TEST.PERIOD_GRANULARITY 
                     '''           
                     cur = conn.cursor()
@@ -163,12 +215,12 @@ def get_sort(params: API_params = Depends(sort_model)):
     core_data_raw.columns=params.columns+cols_other
     core_data=build_df(core_data_raw,params.columns.copy(),list(params.graph_columns))   
     if YTD and last_date_gran=='YEAR': last_date_display=last_date_display+'YTD'
-    elif QTD and last_date_gran=='QUARTER': last_date_display=last_date_display+'YTD'
+    elif QTD and last_date_gran=='QUARTER': last_date_display=last_date_display+'QTD'
+    core_data[last_date_display]=core_data[last_date_display].replace('',0)
     core_data.sort_values(by=last_date_display,ascending=[False],inplace=True)
     list_sort=core_data[core_data[params.columns[0]]!='Total'][params.columns[0]].unique()
     sorterIndex = dict(zip(list_sort, range(len(list_sort))))
     sorterIndex['Total']=-1
-    print(sorterIndex)   
     dataframe_list=[]
     if 'growth_seq' in params.metrics:
         growth_seq=core_data.copy()
@@ -182,7 +234,7 @@ def get_sort(params: API_params = Depends(sort_model)):
         dataframe_list+=[growth_YoY]            
     if 'mkt_share' in params.metrics:
         mkt_share=core_data.copy()
-        body=get_default_body(name='mkt_share')
+        body=get_default_body(params.ingestion_date,name='mkt_share')
         response=get_sort(body)   
         response=json.loads(response)
         data_prop=pd.DataFrame(response['data'],columns=response['columns'])
@@ -192,7 +244,7 @@ def get_sort(params: API_params = Depends(sort_model)):
     if 'mkt_share_growth' in params.metrics:
         if  'mkt_share' not in params.metrics:
             mkt_share=core_data.copy()
-            body=get_default_body(name='mkt_share')
+            body=get_default_body(params.ingestion_date,name='mkt_share')
             response=get_sort(body)   
             response=json.loads(response)
             data_prop=pd.DataFrame(response['data'],columns=response['columns'])
@@ -232,24 +284,3 @@ async def fetch_data(query):
     cur.execute(query)
     core_data = cur.fetch_pandas_all()    
     return core_data
-
-
-@app.get("/get_filter_list", tags=["filters"])
-def get_filters(api_key: APIKey = Depends(get_api_key)):
-    with open("conf/parameter.yml", "r") as file:
-        parameters = yaml.load(file, Loader=ConfigLoader)
-    with open("conf/filter_list.yml", "r") as file:
-        filter_list = yaml.load(file, Loader=ConfigLoader)
-    conn = snowflake.connector.connect(
-    user=os.environ["USER_SF"],
-    password=os.environ["PSW_SF"],
-    account=os.environ["ACCOUNT_SF"],
-    **parameters["snowflake_config"]
-    )  
-    filter_list_result={}
-    for filter_col, filter_info in filter_list.items():
-        cur = conn.cursor()
-        cur.execute(filter_info['query'])
-        data = cur.fetch_pandas_all()
-        filter_list_result[filter_col]=sorted(list(set(list(data[data.columns[0]].apply(filter_funcs(filter_info['func'])).values))))
-    return filter_list_result

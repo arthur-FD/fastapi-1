@@ -5,7 +5,7 @@ from fastapi.openapi.utils import get_openapi
 import os
 from starlette.status import HTTP_403_FORBIDDEN
 from starlette.responses import RedirectResponse, JSONResponse
-from pydantic import BaseModel, create_model
+from pydantic import BaseModel, create_model,constr
 from typing import Optional,List,Dict,Tuple,Sequence
 from fastapi import FastAPI, Depends, status, Query,Body
 
@@ -18,7 +18,7 @@ api_key_query = APIKeyQuery(name=API_KEY_NAME, auto_error=False)
 api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
 api_key_cookie = APIKeyCookie(name=API_KEY_NAME, auto_error=False)
 
-app = FastAPI()
+app = FastAPI(root_path='/xev_api')
 
 
 async def get_api_key(
@@ -85,6 +85,19 @@ class API_params(BaseModel):
     metrics: List[str]
     granularity: Tuple[str,...]
     date_filter: Optional[Dict]
+    ingestion_date: constr(regex=r'[0-9]{4}-[0-9]{2}-[0-9]{2}')
     
-def sort_model(filters: List[filter_sql] = Body(...), columns: List[str] = Body(...),graph_columns: Optional[List[str]] = Body(...),metrics: List[str] = Body(...),granularity: Tuple[str,...] = Body(...),date_filter: Optional[Dict]=Body(...),api_key: APIKey = Depends(get_api_key)):
-    return API_params(filters=filters, columns=columns,graph_columns=graph_columns,metrics=metrics,granularity=granularity,date_filter=date_filter)
+def sort_model(filters: List[filter_sql] = Body(...), columns: List[str] = Body(...),graph_columns: Optional[List[str]] = Body(...),metrics: List[str] = Body(...),granularity: Tuple[str,...] = Body(...),date_filter: Optional[Dict]=Body(...),ingestion_date: constr(regex=r'[0-9]{4}-[0-9]{2}-[0-9]{2}')=Body(...),api_key: APIKey = Depends(get_api_key)):
+    return API_params(filters=filters, columns=columns,graph_columns=graph_columns,metrics=metrics,granularity=granularity,date_filter=date_filter,ingestion_date=ingestion_date)
+
+def sort_sql_filter(column: str, value_filter: List[str]):
+    return filter_sql(column=column, value_filter=value_filter)
+
+class DateParam(BaseModel):
+    date_regex= r'[0-9]{4}-[0-9]{2}-[0-9]{2}'
+    date: constr(regex=r'[0-9]{4}-[0-9]{2}-[0-9]{2}')
+    
+    
+
+def sort_date(date: str=Body(...),date_regex: Optional[str]=Body(...),api_key: APIKey = Depends(get_api_key)):
+    return DateParam(date=date,date_regex= r'[0-9]{4}-[0-9]{2}-[0-9]{2}')

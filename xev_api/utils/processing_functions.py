@@ -8,13 +8,13 @@ import re
 import calendar
 import pandas as pd
 from statistics import mean
-from utils.utils import *
+from xev_api.utils.utils import *
 import yaml
 import warnings
 warnings.filterwarnings("ignore")
 import snowflake.connector
 
-columns_display_dir= r'./conf/columns_display.yml'
+columns_display_dir= r'xev_api/conf/columns_display.yml'
 with open(columns_display_dir, "r") as f:
     columns_display=yaml.load(f)
 
@@ -31,10 +31,11 @@ def process_data(data,columns,granularity):
         #     dict_data_granularity[gran]=dict_data_granularity[gran][dict_data_granularity[gran].DATE <= datetime.strptime(end_date[gran],r'%Y-%m-%d').date()]
         dict_data_granularity[gran].drop(['PERIOD_GRANULARITY'],inplace=True,axis=1)
         list_col_ordered=list(map(lambda date_obj:display_date(gran,date_obj),sorted(list(set(dict_data_granularity[gran].DATE)))))
+        print(dict_data_granularity[gran])
         dict_data_granularity[gran]['DATE']=dict_data_granularity[gran].DATE.apply(lambda date_obj:display_date(gran,date_obj))
-        print(dict_data_granularity)
+        # print(dict_data_granularity)
         dict_data_granularity[gran]=dict_data_granularity[gran].groupby( columns+['DATE']).sum()
-        print(dict_data_granularity)
+        # print(dict_data_granularity)
         if columns!=[]:
             try:
                 dict_data_granularity[gran]=dict_data_granularity[gran].unstack(level='DATE')

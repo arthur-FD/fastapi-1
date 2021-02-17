@@ -1,0 +1,53 @@
+{
+    "filters": [
+        {
+            "column": "OEM_GROUP",
+            "value_filter": [
+                "NIO Inc.",
+                "GM-SAIC",
+                "Dongfeng Motor",
+                "R-N-M Alliance",
+                "Geely NECV Group",
+                "Mazda Motor Corp.",
+                "Lifan Group",
+                "Honda Motor",
+                "Ferrari N.V."
+            ]
+        }
+    ],
+    "columns": [
+        "OEM_GROUP",
+        "MODEL",
+        "BRAND",
+        "REGION",
+        "BATTERY"
+    ],
+    "graph_columns":["OEM_GROUP","REGION"],
+    "metrics": [
+        "absolute",
+        "growth_YoY",
+        "growth_seq",
+        "mkt_share",
+        "mkt_share_growth"
+    ],
+
+    "granularity": [
+        "YEAR","MONTH","QUARTER"
+    ],
+    "date_filter": {
+        "YEAR": {
+            "start_date": "2008-12-31",
+            "end_date": "2020-02-28"
+        },
+        "MONTH": {
+            "start_date": "2008-12-31",
+            "end_date": "2020-02-28"
+        },
+        "QUARTER": {
+            "start_date": "2008-12-31",
+            "end_date": "2020-02-28"
+        }
+    },
+    "ingestion_date":"2021-02-06"
+}
+

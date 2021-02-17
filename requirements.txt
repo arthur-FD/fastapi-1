@@ -75,3 +75,4 @@ uvloop==0.14.0
 websockets==8.1
 wrapt==1.11.2
 wsproto==1.0.0
+pytest

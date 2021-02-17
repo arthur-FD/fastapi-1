@@ -10,7 +10,7 @@ import pandas as pd
 from statistics import mean
 from datetime import datetime, timedelta
 from collections import OrderedDict
-from main import APIKey,API_params,filter_sql,sort_model
+from xev_api.main import APIKey,API_params,filter_sql,sort_model
 
 def get_id_from_child(list_child):
     return [children['props']['id'] for children in list_child if children['props']['hidden']==False]
@@ -28,8 +28,13 @@ def display_date(granularity,date):
     if granularity == 'MONTH':
         return f'{calendar.month_name[date.month].lower()[:3]}-{str(date.year)[2:]}'
     if granularity == 'QUARTER':
-        if str(date.month) in quarter_dict.keys() and date.year>2012:
-            return f'{str(date.year)}{quarter_dict[str(date.month)]}'
+        try:
+            if str(date.month) in quarter_dict.keys() and date.year>2012:
+                return f'{str(date.year)}{quarter_dict[str(date.month)]}'
+        except:
+            print('WTR')
+            print(date)
+            print(granularity)
     if granularity == 'QUARTER_QTD':
         if str(date.month) in quarter_dict.keys() and date.year>2012:
             return f'{str(date.year)}{quarter_dict[str(date.month)]}QTD'            
@@ -172,8 +177,8 @@ def filter_funcs(name):
         
         
 
-def get_default_body(name='mkt_share'):
-    with open(f'json_config/{name}.json', "r") as f:
+def get_default_body(ingestion_date, name='mkt_share'):
+    with open(f'xev_api/json_config/{name}.json', "r") as f:
         body=json.loads(f.read())
     body=sort_model (filters=body['filters'],
                 columns=body['columns'],
@@ -181,5 +186,6 @@ def get_default_body(name='mkt_share'):
                 metrics=body['metrics'],
                 granularity=body['granularity'],
                 date_filter=body['date_filter'],
+                ingestion_date=ingestion_date
                 )  
     return body
