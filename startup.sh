@@ -1,1 +1,1 @@
-gunicorn -w 4 -k uvicorn.workers.UvicornWorker start:app --timeout 300000
+gunicorn -w 4 -k uvicorn.workers.UvicornWorker sf_connector:app --timeout 300000
