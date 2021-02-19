@@ -223,10 +223,7 @@ def get_sort(params: API_params = Depends(sort_model)):
     sorterIndex = dict(zip(list_sort, range(len(list_sort))))
     sorterIndex['Total']=-1
     dataframe_list=[]
-    print(params.granularity)
     if 'growth_seq' in params.metrics and params.granularity!=tuple(['YEAR'],):
-        print('what are you doing here')
-        print(params.granularity)
         growth_seq=core_data.copy()
         growth_seq=compute_growth_date_over_date(growth_seq,params.columns.copy(),params.graph_columns)
         growth_seq['METRICS']='Sequential growth'

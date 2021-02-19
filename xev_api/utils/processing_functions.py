@@ -31,7 +31,6 @@ def process_data(data,columns,granularity):
         #     dict_data_granularity[gran]=dict_data_granularity[gran][dict_data_granularity[gran].DATE <= datetime.strptime(end_date[gran],r'%Y-%m-%d').date()]
         dict_data_granularity[gran].drop(['PERIOD_GRANULARITY'],inplace=True,axis=1)
         list_col_ordered=list(map(lambda date_obj:display_date(gran,date_obj),sorted(list(set(dict_data_granularity[gran].DATE)))))
-        print(dict_data_granularity[gran])
         dict_data_granularity[gran]['DATE']=dict_data_granularity[gran].DATE.apply(lambda date_obj:display_date(gran,date_obj))
         # print(dict_data_granularity)
         dict_data_granularity[gran]=dict_data_granularity[gran].groupby( columns+['DATE']).sum()
@@ -125,11 +124,8 @@ def compute_mkt_share(mkt_share,columns,granularity,conn,data_prop,col_graph=[])
         #     print('CCC')
         #     print(mkt_share)
         total_mkt=data_prop[data_prop['PROPULSION']=='Total'][cols_mkt_share].iloc[0]  
-        print(total_mkt)          
         mkt_share[cols_mkt_share]=mkt_share[cols_mkt_share].replace('',np.nan).replace(0,np.nan).div(total_mkt)
-        print('CCC')
-        print(mkt_share)
-        
+
         return mkt_share[mkt_share[columns[0]]!='Total']
         # return mkt_share.iloc[1:]
 
@@ -149,8 +145,6 @@ def build_df(data,columns,graph_columns=[]):
             Total_sum[columns[0]]='Total'
             data_processed=pd.concat([data_processed,Total_sum],axis=0)
     else:
-        print(columns)
-        print(data)
         Total_sum=pd.DataFrame(data.set_index(columns).sum()).transpose()        
         Total_sum[columns[0]]='Total'
         data_processed=pd.concat([data,Total_sum],axis=0)
@@ -245,7 +239,6 @@ def compute_growth_date_on_date(data,columns,graph_col=[]):
                     cols+=cols_temp
         elif not elt.equals(pd.DataFrame()):
             cols=list(elt.columns)
-            print(pd.concat([final_growth,elt[sort_display_date(cols,gran)]],axis=1))
             final_growth=pd.concat([final_growth,elt[sort_display_date(cols,gran)].replace('',0).astype(float).pct_change(axis='columns')],axis=1)
     final_growth.reset_index(inplace=True)
     return final_growth
