@@ -273,7 +273,7 @@ async def fetch_data(query):
     return core_data
 
 @app.get("/get_last_ingestion_date", tags=["date"])
-def get_ingestion_date(api_key: APIKey = Depends(get_api_key)):
+async def get_ingestion_date(api_key: APIKey = Depends(get_api_key)):
     with open("xev_api/conf/parameter.yml", "r") as file:
         parameters = yaml.load(file, Loader=ConfigLoader)
     conn = snowflake.connector.connect(
@@ -282,9 +282,9 @@ def get_ingestion_date(api_key: APIKey = Depends(get_api_key)):
     account=os.environ["ACCOUNT_SF"],
     **parameters["snowflake_config"]
     )  
-    query=r"select max(FORECAST_RELEASE_DATE) from VEHICLE_SPEC_TEST"
+    query=r"select max(VEHICLE_SPEC_TEST.FORECAST_RELEASE_DATE) from VEHICLE_SPEC_TEST"
     cur = conn.cursor()
     cur.execute(query)    
-    ingestion_date = cur.fetch_pandas_all()['MAX(FORECAST_RELEASE_DATE)'].iloc[0]
-    return ingestion_date
+    ingestion_date = cur.fetch_pandas_all()['MAX(VEHICLE_SPEC_TEST.FORECAST_RELEASE_DATE)'].iloc[0]
+    return str(ingestion_date)
 
