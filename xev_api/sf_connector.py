@@ -242,7 +242,7 @@ def get_sort(params: API_params = Depends(sort_model)):
         mkt_share=compute_mkt_share(mkt_share,params.columns.copy(),params.granularity,conn,data_prop.copy(),params.graph_columns)
         mkt_share['METRICS']='mkt_share'
         dataframe_list+=[mkt_share]                     
-    if 'mkt_share_change' in params.metrics:
+    if 'mkt_share_growth' in params.metrics:
         if  'mkt_share' not in params.metrics:
             mkt_share=core_data.copy()
             body=get_default_body(params.ingestion_date,name='mkt_share')
@@ -253,7 +253,7 @@ def get_sort(params: API_params = Depends(sort_model)):
             mkt_share['METRICS']='mkt_share'
         growth_mkt_share=mkt_share.drop(['METRICS'],axis=1)
         growth_mkt_share=compute_mkt_share_change(growth_mkt_share,params.columns.copy(),params.graph_columns)
-        growth_mkt_share['METRICS']='mkt_share_change'
+        growth_mkt_share['METRICS']='mkt_share_growth'
         dataframe_list+=[growth_mkt_share]
         
     core_data['METRICS']='Absolute'
