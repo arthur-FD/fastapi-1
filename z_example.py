@@ -9,19 +9,13 @@ import os
 #     return response.json()
 
 def get_data(body):
-    response = requests.post('http://127.0.0.1:8050/custom_view',data=body,headers = {'access_token': os.environ['API_KEY']})
+    response = requests.post('http://127.0.0.1:8070/custom_view',data=body,headers = {'access_token': os.environ['API_KEY']})
     print(response)
-    response=json.loads(response.json())
+    response=response.json()
     return pd.DataFrame(response['data'], columns=response['columns'])
 
 body={
     "filters": [
-        {
-            "column": "PERIOD_GRANULARITY",
-            "value_filter": [
-                "YEAR"
-            ]
-        }
     ],
     "columns": [
         "PROPULSION",
@@ -40,7 +34,8 @@ body={
 
 
     "granularity": [
-        "YEAR"
+        "YEAR",
+        "QUARTER"
     ],
     "date_filter": {
         "YEAR": {

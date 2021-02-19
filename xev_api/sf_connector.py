@@ -141,8 +141,9 @@ def get_sort(params: API_params = Depends(sort_model)):
     last_date_display=display_date(last_date_gran,last_date)            
     dict_TD=dict()
     if 'YEAR' in params.granularity or 'QUARTER' in params.granularity:
-        last_year=core_data[core_data.PERIOD_GRANULARITY=='YEAR'].DATE.max().year
-        last_month=core_data[core_data.PERIOD_GRANULARITY=='YEAR'].DATE.max().month
+        last_date=core_data[(core_data.PERIOD_GRANULARITY=='YEAR') |  (core_data.PERIOD_GRANULARITY=='QUARTER') ].DATE.max()
+        last_year=last_date.year
+        last_month=last_date.month
         query_month_availables=f'''select MONTHS_AVAILABLE FROM CONFIG where YEAR={last_year}'''
         cur = conn.cursor()
         cur.execute(query_month_availables)
@@ -222,7 +223,10 @@ def get_sort(params: API_params = Depends(sort_model)):
     sorterIndex = dict(zip(list_sort, range(len(list_sort))))
     sorterIndex['Total']=-1
     dataframe_list=[]
-    if 'growth_seq' in params.metrics:
+    print(params.granularity)
+    if 'growth_seq' in params.metrics and params.granularity!=tuple(['YEAR'],):
+        print('what are you doing here')
+        print(params.granularity)
         growth_seq=core_data.copy()
         growth_seq=compute_growth_date_over_date(growth_seq,params.columns.copy(),params.graph_columns)
         growth_seq['METRICS']='Sequential growth'
@@ -251,8 +255,8 @@ def get_sort(params: API_params = Depends(sort_model)):
             mkt_share=compute_mkt_share(mkt_share,params.columns.copy(),params.granularity,conn,data_prop.copy(),params.graph_columns)
             mkt_share['METRICS']='mkt_share'
         growth_mkt_share=mkt_share.drop(['METRICS'],axis=1)
-        growth_mkt_share=compute_growth_date_on_date(growth_mkt_share,params.columns.copy(),params.graph_columns)
-        growth_mkt_share['METRICS']='mkt_share_growth'
+        growth_mkt_share=compute_mkt_share_change(growth_mkt_share,params.columns.copy(),params.graph_columns)
+        growth_mkt_share['METRICS']='mkt_share_change'
         dataframe_list+=[growth_mkt_share]
         
     core_data['METRICS']='Absolute'

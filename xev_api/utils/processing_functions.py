@@ -182,11 +182,9 @@ def build_df(data,columns,graph_columns=[]):
 
 def compute_growth_date_over_date(data,columns,graph_col=[]):
     col_tab_date={'MONTH':[],'QUARTER':[],'YEAR':[],'QUARTER_QTD':[],'YEAR_YTD':[]}
-    print(graph_col)
     if graph_col!=[]:columns+=['graph']
     data=data.set_index(columns)
     final_growth=pd.DataFrame()
-    print(data.columns)
     for col in data.columns:
         col_tab_date[check_date_gran(col)].append(col)
     for gran, cols in col_tab_date.items():
@@ -194,7 +192,6 @@ def compute_growth_date_over_date(data,columns,graph_col=[]):
             temp=data[sort_display_date(cols,gran)].replace('',0).astype(float).pct_change(axis='columns')
             final_growth=pd.concat([final_growth,temp],axis=1)
     final_growth.reset_index(inplace=True)
-    print(final_growth)
     return final_growth
 
 # def compute_mkt_share(data,columns):
@@ -204,6 +201,24 @@ def compute_growth_date_over_date(data,columns,graph_col=[]):
 #         for prop in sum_prop.index:
 #             mkt_share=pd.concat([mkt_share,data[data['PROPULSION']==prop].set_index(columns).astype(float).divide(sum_prop.loc[prop]).reset_index()],axis=0,ignore_index=True)
 #     return mkt_share.set_index(columns).applymap(lambda x: format_string(x,type_data='pct')).reset_index()
+
+def compute_mkt_share_change(data,columns,graph_col=[]):
+    col_tab_date={'MONTH':[],'QUARTER':[],'YEAR':[],'QUARTER_QTD':[],'YEAR_YTD':[]}
+    if graph_col!=[]:columns+=['graph']
+    data=data.set_index(columns)
+    final_growth=pd.DataFrame()
+    for col in data.columns:
+        col_tab_date[check_date_gran(col)].append(col)
+    for gran, cols in col_tab_date.items():
+        if cols !=[]:
+            temp=data[sort_display_date(cols,gran)].replace('',0).astype(float).diff(axis=1)
+            final_growth=pd.concat([final_growth,temp],axis=1)
+    final_growth.reset_index(inplace=True)
+    return final_growth
+
+
+
+
 
 def compute_growth_date_on_date(data,columns,graph_col=[]):
     col_tab_date={'MONTH':{},'QUARTER':{'Q1':pd.DataFrame(),'Q2':pd.DataFrame(),'Q3':pd.DataFrame(),'Q4':pd.DataFrame()},'YEAR':pd.DataFrame(),'QUARTER_QTD':pd.DataFrame(),'YEAR_YTD':pd.DataFrame()}
