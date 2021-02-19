@@ -18,6 +18,25 @@ from xev_api.utils.processing_functions import *
 from xev_api.main import app,get_api_key,APIKey,API_params,filter_sql,sort_model,sort_sql_filter
 
 
+
+@app.get("/get_last_ingestion_date", tags=["ingestion"])
+def get_ingestion_date(api_key: APIKey = Depends(get_api_key)):
+    with open("xev_api/conf/parameter.yml", "r") as file:
+        parameters = yaml.load(file, Loader=ConfigLoader)
+    conn = snowflake.connector.connect(
+    user=os.environ["USER_SF"],
+    password=os.environ["PSW_SF"],
+    account=os.environ["ACCOUNT_SF"],
+    **parameters["snowflake_config"]
+    )  
+    query=r"select max(FORECAST_RELEASE_DATE) from VEHICLE_SPEC_TEST"
+    cur = conn.cursor()
+    cur.execute(query)    
+    ingestion_date = cur.fetch_pandas_all()['MAX(FORECAST_RELEASE_DATE)'].iloc[0]
+    return ingestion_date
+
+
+
 @app.get("/get_filter_list/", tags=["filters"])
 def get_filters(ingestion_date:constr(regex=r'[0-9]{4}-[0-9]{2}-[0-9]{2}')="",api_key: APIKey = Depends(get_api_key)):
     with open("xev_api/conf/parameter.yml", "r") as file:
