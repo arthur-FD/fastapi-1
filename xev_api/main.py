@@ -73,10 +73,10 @@ async def route_logout_and_remove_cookie():
     return response
 
 
-# @app.get("/secure_endpoint", tags=["test"])
-# async def get_open_api_endpoint(api_key: APIKey = Depends(get_api_key)):
-#     response = "How cool is this?"
-#     return response
+@app.get("/secure_endpoint", tags=["test"])
+async def get_open_api_endpoint(api_key: APIKey = Depends(get_api_key)):
+    response = "How cool is this?"
+    return response
 
 
 class filter_sql(BaseModel):  # pylint: disable=too-few-public-methods
